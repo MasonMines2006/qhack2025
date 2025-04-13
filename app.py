@@ -5,7 +5,7 @@ st.set_page_config(
     page_icon="👋",
 )
 
-st.write("# Welcome to Streamlit! 👋")
+st.title("A Baisc Introduction to Quantum Concepts and Computing :sunglasses:")
 
 st.sidebar.success("Select a demo above.")
 
