@@ -18,6 +18,10 @@ def create_circuit():
     qc.cx(0, 1)
     return qc
 
+qc = create_circuit()
+fig = qc.draw(output='mpl')  # matplotlib figure
+st.pyplot(fig)
+
 st.markdown("# Page 2 ❄️")
 st.sidebar.markdown("# Page 2 ❄️")
 create_circuit()
