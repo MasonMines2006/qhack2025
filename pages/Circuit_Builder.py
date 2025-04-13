@@ -3,7 +3,10 @@ from qiskit import QuantumCircuit
 from qiskit import transpile
 from qiskit_aer import AerSimulator
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+import pydeck as pdk
 
 # Set up the page
 st.set_page_config(page_title="Quantum Circuit Simulation", layout="centered")
@@ -15,7 +18,7 @@ st.write("You can adjust the number of qubits and see how the circuit behaves.")
 st.markdown("---")
 
 def generate_slider():
-        num_qubits = st.slider(min_value=2, max_value=10, label='Select number of qubits', value=6)
+        num_qubits = st.slider(min_value=2, max_value=16, label='Select number of qubits', value=6)
         return num_qubits
 def setup_circuit():
     st.session_state.num_qubits = num_qubits  # Save to session state
@@ -86,7 +89,7 @@ if st.session_state.stage >= 2:
 if st.session_state.stage >= 3:
     st.write("### Simulating the Quantum Circuit:")
     simulator = AerSimulator()
-    shots = 64
+    shots = (num_qubits*num_qubits)
     compiled_circuit = transpile(qc, simulator)
 
     result = simulator.run(compiled_circuit, shots=shots).result()
@@ -102,7 +105,7 @@ if st.session_state.stage >= 3:
         value = int(bs, 2)
         int_values.append(value)
 
-    int_array = np.array(int_values).reshape(8, 8)  # Reshaping to 8x8
+    int_array = np.array(int_values).reshape(num_qubits, num_qubits)  # Reshaping to 8x8
 
     if not st.session_state.additional_data:
         set_state(4)  # Skip to stage 4
@@ -118,23 +121,47 @@ if st.session_state.stage >= 3:
 
 # Stage 6: Visualize the results
 if st.session_state.stage >= 4:
-    # Create the plot
-    fig, ax = plt.subplots()
-    ax.imshow(int_array, cmap='hot')
-    ax.set_title("Quantum Randomness in Grayscale")
-    ax.axis('off')  # Hide the axis
+    tab1, tab2, tab3 = st.tabs(["Pixel-Art", "3-D Plot", "DNA"])
 
-    # Display the plot in Streamlit
-    st.pyplot(fig)
+    with tab1:
+        # Create the plot
+        fig, ax = plt.subplots()
+        ax.imshow(int_array, cmap='coolwarm', interpolation='nearest')
+        ax.set_title("Quantum Randomness in Pixel Art")
 
+        ax.axis('off')  # Hide the axis
+        # Display the plot in Streamlit
+        st.pyplot(fig)
+    with tab2:
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection='3d')
+        X, Y = np.meshgrid(np.arange(num_qubits), np.arange(num_qubits))
+        ax.plot_surface(X, Y, int_array, cmap='coolwarm')
+        st.pyplot(fig)
+    with tab3:
+        dna_library = {
+                '0': 'A',
+                '1': 'C',
+                '2': 'G',
+                '3': 'T'
+            }
+        dna_sequence = []
+                
+        for row in int_array:
+            for value in row:
+                dna_base = dna_library[str(value % 4)]  # Use modulo to ensure values map correctly
+                dna_sequence.append(dna_base)
+
+        dna_sequence_str = ''.join(dna_sequence)
+        st.write("Generated DNA Sequence:", dna_sequence_str)
+    
     # Option to start over
     st.button('Start Over', on_click=set_state, args=[0], key="start_over")
 
     # Final instructions or explanation
     st.write(
         """
-        This circuit applies a Hadamard gate to each qubit, then applies
-        CNOT gates between pairs of qubits. Finally, it measures the qubits.
-        You can experiment by changing the number of qubits or gates!
+    
         """
     )
+
