@@ -7,6 +7,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import pydeck as pdk
+import random
 import seaborn as sns
 
 # Set up the page
@@ -55,24 +56,40 @@ if st.session_state.stage >= 2:
     qc = QuantumCircuit(num_qubits, num_qubits)
 
     # Create a multiselect for users and a toggle for rolling average
-    all_gates = ["H-Gate", "Z-Gate", "CX-Gate"]
+    all_gates = ["Hadamard/H-Gate", "Z-Gate", "X-Gate", "Y-Gate", "CX-Gate"]
     with st.container():
         gates = st.multiselect("Gates", all_gates, default=all_gates)
         st.session_state.additional_data = st.checkbox("Generate Additional Data")
 
     # 1. Apply Hadamard to all qubits to create superposition
-    if "H-Gate" in gates:
+    if "Hadamard/H-Gate" in gates:
         for qubit in range(num_qubits):
-            qc.h(qubit)
+            if random.random() < 0.8:
+                qc.h(qubit)
+
+    # 2. Apply X gate to all qubits
+    if "X-Gate" in gates:
+        for qubit in range(num_qubits):
+            if random.random() < 0.5:
+                qc.x(qubit)
+
+    # 3. Apply Y gate to all qubits
+    if "Y-Gate" in gates:
+        for qubit in range(num_qubits):
+            if random.random() < 0.5:
+                qc.y(qubit)
 
     # 2 Add some other random gates to some of the qubits. Try using the X or cx gates
     if "CX-Gate" in gates:
         for qubit in range(0, num_qubits - 1, 2):
-            qc.cx(qubit, qubit + 1)
+            if random.random() < 0.5:
+                qc.cx(qubit, qubit + 1)
+            
     
     if "Z-Gate" in gates:
         for qubit in range(num_qubits):
-            qc.z(qubit)
+            if random.random() < 0.5:
+                qc.z(qubit)
 
     # 3. Measure all qubits
     for i in range(num_qubits):
@@ -122,7 +139,7 @@ if st.session_state.stage >= 3:
 
 # Stage 6: Visualize the results
 if st.session_state.stage >= 4:
-    tab1, tab2, tab3, tab4 = st.tabs(["Pixel-Art", "3-D Plot", "DNA", "Seaborn"])
+    tab1, tab2, tab3 = st.tabs(["Pixel-Art", "3-D Plot", "DNA"])
 
     with tab1:
         # Create a Seaborn heatmap
@@ -155,9 +172,6 @@ if st.session_state.stage >= 4:
 
         dna_sequence_str = ''.join(dna_sequence)
         st.write("Generated DNA Sequence:", dna_sequence_str)
-    with tab4:
-        #TODO
-        fig, ax = plt.subplots()
     
     # Option to start over
     st.button('Start Over', on_click=set_state, args=[0], key="start_over")
