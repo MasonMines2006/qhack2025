@@ -8,8 +8,6 @@ import matplotlib.pyplot as plt
 # Set up the page
 st.set_page_config(page_title="Quantum Circuit Simulation", layout="centered")
 st.title("Quantum Circuit Simulation")
-st.sidebar.title("Navigation")
-st.sidebar.markdown("# Quantum Circuit Simulation")
 st.markdown("---")
 st.header("Create and Simulate a Quantum Circuit")
 st.write("This app allows you to create a quantum circuit, simulate it, and visualize the results.")
@@ -54,9 +52,9 @@ if st.session_state.stage >= 2:
 
     # Create a multiselect for users and a toggle for rolling average
     all_gates = ["H-Gate", "Z-Gate", "CX-Gate"]
-    with st.container(border=True):
+    with st.container():
         gates = st.multiselect("Gates", all_gates, default=all_gates)
-        rolling_average = st.toggle("Rolling average")
+        st.session_state.additional_data = st.checkbox("Generate Additional Data")
 
     # 1. Apply Hadamard to all qubits to create superposition
     if "H-Gate" in gates:
@@ -93,38 +91,33 @@ if st.session_state.stage >= 3:
 
     result = simulator.run(compiled_circuit, shots=shots).result()
     counts = result.get_counts()
-    st.write("Measurement outcomes:", counts)
-
-    # Button to go to the next stage
-    st.button('Next Step', on_click=set_state, args=[4], key="next_step_3")
-
-# Stage 4: Process and display bitstrings
-if st.session_state.stage >= 4:
+    
     bitstring_list = []
     for bitstring, cnt in counts.items():
         bitstring_list.extend([bitstring] * cnt)
 
-    st.write("We have", len(bitstring_list), "bitstrings in total.")
-
-    # Button to go to the next stage
-    st.button('Next Step', on_click=set_state, args=[5], key="next_step_4")
-
-# Stage 5: Convert to integer array and display
-if st.session_state.stage >= 5:
+    
     int_values = []
     for bs in bitstring_list:
         value = int(bs, 2)
         int_values.append(value)
 
     int_array = np.array(int_values).reshape(8, 8)  # Reshaping to 8x8
-    st.write("### Converted Integer Array:")
-    st.write(int_array)
 
-    # Button to go to the next stage
-    st.button('Next Step', on_click=set_state, args=[6], key="next_step_5")
+    if not st.session_state.additional_data:
+        set_state(4)  # Skip to stage 4
+    else: 
+        st.write("Measurement outcomes:", counts)
+        st.write("We have", len(bitstring_list), "bitstrings in total.")
+        st.write("### Converted Integer Array:")
+        st.write(int_array)
+        # Button to go to the next stage
+        st.button('Next Step', on_click=set_state, args=[4], key="next_step_3")
+
+    
 
 # Stage 6: Visualize the results
-if st.session_state.stage >= 6:
+if st.session_state.stage >= 4:
     # Create the plot
     fig, ax = plt.subplots()
     ax.imshow(int_array, cmap='hot')
