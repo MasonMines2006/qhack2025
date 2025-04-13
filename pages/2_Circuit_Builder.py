@@ -6,7 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # Set up the page
-st.set_page_config(page_title="Quantum Circuit Simulation", layout="centered")
+st.set_page_config(page_title="Quantum Circuit Simulation", page_icon=":zap:", layout="centered")
 st.title("Quantum Circuit Simulation")
 st.markdown("---")
 st.header("Create and Simulate a Quantum Circuit")

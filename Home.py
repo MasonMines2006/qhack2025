@@ -1,6 +1,6 @@
 import streamlit as st
 
-st.set_page_config(page_title="Quantum Concepts", layout="centered")
+st.set_page_config(page_title="Home", page_icon="🏠", layout="centered")
 
 
 if "page" not in st.session_state:
@@ -262,11 +262,16 @@ elif page == "entanglement":
     Imagine two spinning coins that always land on the same side — no matter how far apart they are. That’s the core intuition.
     """)
 
+    st.header("📸 A Simple Visual of Entangled Qubits")
+
     st.image(
-    "https://upload.wikimedia.org/wikipedia/commons/7/7a/Qubit_Entanglement.svg",
-    caption="Entangled qubits behave as a single system — not two separate ones.",
+    "https://cdn.pixabay.com/photo/2020/11/22/08/37/quantum-physics-5762950_1280.jpg",
+    caption="Artistic visualization of quantum entanglement — two particles sharing a quantum connection.",
     use_container_width=True
     )
+
+
+
 
     st.markdown("---")
 
