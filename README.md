@@ -1,5 +1,5 @@
 # Q-Learn: A beginner friendly web app geared towards testing the waters of quantum computing.
-## Submitted for Quantum Hacks 2025 - Begginner Track
+## Submitted for Quantum Hacks 2025 - Free Form Track
 ### Created by Conor McHaney and Mason Mines : UNC Chapel Hill '28
 
 🛠️ Installation
