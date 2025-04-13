@@ -11,8 +11,13 @@ from qiskit_aer import AerSimulator
 import numpy as np
 import matplotlib.pyplot as plt
 
-print("Libraries imported successfully!")
-
+@st.cache_data
+def create_circuit():
+    qc = QuantumCircuit(2)
+    qc.h(0)
+    qc.cx(0, 1)
+    return qc
 
 st.markdown("# Page 2 ❄️")
 st.sidebar.markdown("# Page 2 ❄️")
+create_circuit()

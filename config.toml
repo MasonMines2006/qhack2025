@@ -7,3 +7,6 @@ base="light"
 [ui]
 # Replace "Hello" with whatever title you want in the sidebar dropdown
 menuTitle = "Hello"
+
+[ui]
+menuTitle = "My Streamlit App"
