@@ -4,8 +4,8 @@
 
 🛠️ Installation
 ```
-git clone https://github.com/your-username/quantum-visualizer.git
-cd quantum-visualizer
+git clone https://github.com/MasonMines2006/qhack2025.git
+cd qhack2025
 pip install -r requirements.txt
 streamlit run app.py
 ```
