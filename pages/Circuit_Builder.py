@@ -7,6 +7,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import pydeck as pdk
+import seaborn as sns
 
 # Set up the page
 st.set_page_config(page_title="Quantum Circuit Simulation", layout="centered")
@@ -121,16 +122,16 @@ if st.session_state.stage >= 3:
 
 # Stage 6: Visualize the results
 if st.session_state.stage >= 4:
-    tab1, tab2, tab3 = st.tabs(["Pixel-Art", "3-D Plot", "DNA"])
+    tab1, tab2, tab3, tab4 = st.tabs(["Pixel-Art", "3-D Plot", "DNA", "Seaborn"])
 
     with tab1:
-        # Create the plot
+        # Create a Seaborn heatmap
         fig, ax = plt.subplots()
-        ax.imshow(int_array, cmap='coolwarm', interpolation='nearest')
-        ax.set_title("Quantum Randomness in Pixel Art")
-
-        ax.axis('off')  # Hide the axis
-        # Display the plot in Streamlit
+        sns.heatmap(int_array, annot=False, fmt='d', cmap='coolwarm', cbar=True)
+        plt.gca().axes.get_xaxis().set_visible(False)  # Hide x-axis
+        plt.gca().axes.get_yaxis().set_visible(False)  # Hide y-axis
+        ax.set_title("Quantum Randomness in Seaborn")
+        
         st.pyplot(fig)
     with tab2:
         fig = plt.figure()
@@ -154,6 +155,9 @@ if st.session_state.stage >= 4:
 
         dna_sequence_str = ''.join(dna_sequence)
         st.write("Generated DNA Sequence:", dna_sequence_str)
+    with tab4:
+        #TODO
+        fig, ax = plt.subplots()
     
     # Option to start over
     st.button('Start Over', on_click=set_state, args=[0], key="start_over")
