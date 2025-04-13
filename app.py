@@ -4,7 +4,7 @@ import numpy as np
 
 st.set_page_config(page_title="Quantum Intro", layout="centered")
 
-st.title("A basic introduction to quantum concepts and computing")
+st.title("A Baisc Introduction to Quantum Concepts and Computing :sunglasses:")
 
 st.markdown("---")
 

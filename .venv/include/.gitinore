@@ -1,0 +1,23 @@
+# Ignore virtual environments
+.venv/
+
+# Ignore Python bytecode
+__pycache__/
+*.py[cod]
+
+# Ignore Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# Ignore system files
+.DS_Store
+Thumbs.db
+
+# Ignore VS Code settings
+.vscode/
+
+# Ignore Streamlit cache and config
+.streamlit/
+
+# Ignore environment/config files
+.env
+*.env
