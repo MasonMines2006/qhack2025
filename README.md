@@ -3,18 +3,20 @@
 ### Created by Conor McHaney and Mason Mines : UNC Chapel Hill '28
 
 🛠️ Installation
-'''
+```
 git clone https://github.com/your-username/quantum-visualizer.git
 cd quantum-visualizer
 pip install -r requirements.txt
 streamlit run app.py
-'''
+```
 
 
 📦 Requirements
 Install all dependencies with:
 
-'''pip install -r requirements.txt'''
+```
+pip install -r requirements.txt
+```
 
 Example libraries used:
 - qiskit
@@ -26,7 +28,6 @@ Example libraries used:
 
 ✨ Contributions
 Pull requests are welcome! If you have creative ideas for new quantum visualizations or interactive features, we'd love to hear them.
-
 
 
 
