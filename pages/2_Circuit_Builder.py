@@ -1,7 +1,8 @@
 import streamlit as st
-from qiskit import QuantumCircuit
-from qiskit import transpile
+from qiskit import QuantumCircuit, transpile
 from qiskit_aer import AerSimulator
+from qiskit.quantum_info import Statevector, partial_trace
+from qiskit.visualization import plot_bloch_multivector, plot_bloch_vector
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -10,15 +11,20 @@ import pydeck as pdk
 import random
 import seaborn as sns
 
+from streamlit_extras.chart_container import chart_container 
+from streamlit_extras.dataframe_explorer import dataframe_explorer
+
+    
+
 # Set up the page
 st.set_page_config(page_title="Quantum Circuit Simulation", page_icon=":zap:", layout="centered")
 st.title("Quantum Circuit Simulation")
 st.markdown("---")
-st.header("Create and Simulate a Quantum Circuit")
-st.write("This app allows you to create a quantum circuit, simulate it, and visualize the results.")
-st.write("You can adjust the number of qubits and see how the circuit behaves.")
+st.header("Build. Simulate. Visualize.")
+st.write("Explore the fundamentals of quantum computing by designing your own quantum circuits—no prior experience required. " \
+"Q-Learn lets you adjust the number of qubits, apply quantum gates, and simulate the outcome in real time.")
+st.write("Whether you're a curious beginner or brushing up on core concepts, this interactive tool helps bring quantum mechanics to life—one gate at a time.")
 st.markdown("---")
-
 def generate_slider():
         num_qubits = st.slider(min_value=2, max_value=16, label='Select number of qubits', value=6)
         return num_qubits
@@ -26,6 +32,59 @@ def setup_circuit():
     st.session_state.num_qubits = num_qubits  # Save to session state
     
     return qc
+@st.cache_resource
+def get_circuit(gates, num_qubits, measure = True):
+    qc = QuantumCircuit(num_qubits, num_qubits)
+
+    if "Hadamard/H-Gate" in gates:
+        for qubit in range(num_qubits):
+            if random.random() < 0.8:
+                qc.h(qubit)
+
+    if "X-Gate" in gates:
+        for qubit in range(num_qubits):
+            if random.random() < 0.5:
+                qc.x(qubit)
+
+    if "Y-Gate" in gates:
+        for qubit in range(num_qubits):
+            if random.random() < 0.5:
+                qc.y(qubit)
+
+    if "CX-Gate" in gates:
+        for qubit in range(0, num_qubits - 1, 2):
+            if random.random() < 0.5:
+                qc.cx(qubit, qubit + 1)
+
+    if "Z-Gate" in gates:
+        for qubit in range(num_qubits):
+            if random.random() < 0.5:
+                qc.z(qubit)
+    qc_mod = qc.copy()    
+    if measure:
+        for i in range(num_qubits):
+            qc.measure(i, i) 
+    return qc, qc_mod
+
+@st.cache_data
+def simulate_circuit(num_qubits: int):
+    simulator = AerSimulator()
+    shots = (num_qubits*num_qubits)
+    compiled_circuit = transpile(qc, simulator)
+    result = simulator.run(compiled_circuit, shots=num_qubits * num_qubits).result()
+    counts = result.get_counts()
+
+    bitstring_list = []
+    for bitstring, cnt in counts.items():
+        bitstring_list.extend([bitstring] * cnt)
+
+    int_values = [int(bs, 2) for bs in bitstring_list]
+    int_array = np.array(int_values).reshape(num_qubits, num_qubits)
+
+    return int_array, counts, bitstring_list
+@st.cache_resource
+def get_statevector(_qc_mod):
+    return Statevector.from_instruction(_qc_mod)
 
 # Initialize stage state if not present
 if 'stage' not in st.session_state:
@@ -40,7 +99,7 @@ if st.session_state.stage == 0:
 
 # Stage 1: Create the quantum circuit
 if st.session_state.stage >= 1:
-    num_qubits = generate_slider()
+    num_qubits = st.slider("Number of Qubits", 2, 16, 6)
     qc_demo = QuantumCircuit(num_qubits, num_qubits)
     for i in range(num_qubits):
         qc_demo.measure(i, i)
@@ -53,52 +112,16 @@ if st.session_state.stage >= 1:
 
 # Stage 2: Apply gates to the quantum circuit
 if st.session_state.stage >= 2:
-    qc = QuantumCircuit(num_qubits, num_qubits)
-
-    # Create a multiselect for users and a toggle for rolling average
     all_gates = ["Hadamard/H-Gate", "Z-Gate", "X-Gate", "Y-Gate", "CX-Gate"]
-    with st.container():
-        gates = st.multiselect("Gates", all_gates, default=all_gates)
-        st.session_state.additional_data = st.checkbox("Generate Additional Data")
+    gates = st.multiselect("Gates", all_gates, default=all_gates)
+    st.checkbox("Generate Additional Data", key="generate_extra")
 
-    # 1. Apply Hadamard to all qubits to create superposition
-    if "Hadamard/H-Gate" in gates:
-        for qubit in range(num_qubits):
-            if random.random() < 0.8:
-                qc.h(qubit)
-
-    # 2. Apply X gate to all qubits
-    if "X-Gate" in gates:
-        for qubit in range(num_qubits):
-            if random.random() < 0.5:
-                qc.x(qubit)
-
-    # 3. Apply Y gate to all qubits
-    if "Y-Gate" in gates:
-        for qubit in range(num_qubits):
-            if random.random() < 0.5:
-                qc.y(qubit)
-
-    # 2 Add some other random gates to some of the qubits. Try using the X or cx gates
-    if "CX-Gate" in gates:
-        for qubit in range(0, num_qubits - 1, 2):
-            if random.random() < 0.5:
-                qc.cx(qubit, qubit + 1)
-            
-    
-    if "Z-Gate" in gates:
-        for qubit in range(num_qubits):
-            if random.random() < 0.5:
-                qc.z(qubit)
-
-    # 3. Measure all qubits
-    for i in range(num_qubits):
-        #Write the code to measure qubits in here
-        qc.measure(i, i)
 
     st.write("### Quantum Circuit with Gates:")
+    qc, qc_mod = get_circuit(gates, num_qubits, True)
     fig = qc.draw(output='mpl')
     st.pyplot(fig)
+
 
     # Button to go to the next stage
     st.button('Next Step', on_click=set_state, args=[3], key="next_step_2")
@@ -106,42 +129,33 @@ if st.session_state.stage >= 2:
 # Stage 3: Simulate the quantum circuit
 if st.session_state.stage >= 3:
     st.write("### Simulating the Quantum Circuit:")
-    simulator = AerSimulator()
-    shots = (num_qubits*num_qubits)
-    compiled_circuit = transpile(qc, simulator)
+    int_array, counts, bitstring_list = simulate_circuit(num_qubits)
 
-    result = simulator.run(compiled_circuit, shots=shots).result()
-    counts = result.get_counts()
-    
-    bitstring_list = []
-    for bitstring, cnt in counts.items():
-        bitstring_list.extend([bitstring] * cnt)
-
-    
-    int_values = []
-    for bs in bitstring_list:
-        value = int(bs, 2)
-        int_values.append(value)
-
-    int_array = np.array(int_values).reshape(num_qubits, num_qubits)  # Reshaping to 8x8
-
-    if not st.session_state.additional_data:
+    if not st.session_state.generate_extra:
         set_state(4)  # Skip to stage 4
-    else: 
+    else:
         st.write("Measurement outcomes:", counts)
         st.write("We have", len(bitstring_list), "bitstrings in total.")
         st.write("### Converted Integer Array:")
-        st.write(int_array)
+        columns = [f"Q-Bit {i}" for i in range(int_array.shape[1])]
+        df = pd.DataFrame(int_array, columns=columns)
+        filtered_df = dataframe_explorer(df, case=False)
+        st.dataframe(filtered_df, use_container_width=True)
+
         # Button to go to the next stage
         st.button('Next Step', on_click=set_state, args=[4], key="next_step_3")
 
     
 
 # Stage 6: Visualize the results
-if st.session_state.stage >= 4:
-    tab1, tab2, tab3 = st.tabs(["Pixel-Art", "3-D Plot", "DNA"])
-
+if st.session_state.stage >= 4:                 
+    tab1, tab2, tab3, tab4, tab5= st.tabs(["Full-Data","Pixel-Art", "3-D Plot", "DNA", "Bloch Sphere"])
     with tab1:
+        columns = [f"Q-Bit {i}" for i in range(int_array.shape[1])]
+        df = pd.DataFrame(int_array, columns=columns)
+        with chart_container(df):
+            st.area_chart(df)
+    with tab2:
         # Create a Seaborn heatmap
         fig, ax = plt.subplots()
         sns.heatmap(int_array, annot=False, fmt='d', cmap='coolwarm', cbar=True)
@@ -150,13 +164,13 @@ if st.session_state.stage >= 4:
         ax.set_title("Quantum Randomness in Seaborn")
         
         st.pyplot(fig)
-    with tab2:
+    with tab3:
         fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d')
         X, Y = np.meshgrid(np.arange(num_qubits), np.arange(num_qubits))
         ax.plot_surface(X, Y, int_array, cmap='coolwarm')
         st.pyplot(fig)
-    with tab3:
+    with tab4:
         dna_library = {
                 '0': 'A',
                 '1': 'C',
@@ -172,14 +186,17 @@ if st.session_state.stage >= 4:
 
         dna_sequence_str = ''.join(dna_sequence)
         st.write("Generated DNA Sequence:", dna_sequence_str)
-    
+    with tab5: 
+        st.write("### Bloch Sphere Visualization:")
+        state = get_statevector(qc_mod)
+        fig = plot_bloch_multivector(state)
+        st.pyplot(fig)
+        
+      # Final instructions
+        st.markdown("---")
+        st.markdown("Save your circuit output as a visualization of your quantum journey!")
     # Option to start over
     st.button('Start Over', on_click=set_state, args=[0], key="start_over")
 
-    # Final instructions or explanation
-    st.write(
-        """
-    
-        """
-    )
+  
 

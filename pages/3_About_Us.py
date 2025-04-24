@@ -1,4 +1,5 @@
 import streamlit as st
+from streamlit_extras.let_it_rain import rain
 
 st.title("About Us :moyai:")
 st.markdown("---")
@@ -18,3 +19,9 @@ st.header("Who We Are :nerd_face::")
 st.write("Mason Mines - Backend ([GitHub](https://github.com/MasonMines2006))")
 st.write("Conor McHaney - Frontend & UI/UX ([GitHub](https://github.com/cmchaney31))")
 st.markdown("---")
+rain(
+        emoji="⚛",
+        font_size=54,
+        falling_speed=10,
+        animation_length="infinite",
+    )
