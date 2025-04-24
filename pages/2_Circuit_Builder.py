@@ -26,52 +26,53 @@ st.write("Explore the fundamentals of quantum computing by designing your own qu
 "Q-Learn lets you adjust the number of qubits, apply quantum gates, and simulate the outcome in real time.")
 st.write("Whether you're a curious beginner or brushing up on core concepts, this interactive tool helps bring quantum mechanics to life—one gate at a time.")
 st.markdown("---")
+if "random_seed" not in st.session_state:
+    st.session_state.random_seed = random.randint(0, 1_000_000)
+seed = st.session_state.random_seed
 def generate_slider():
         num_qubits = st.slider(min_value=2, max_value=16, label='Select number of qubits', value=6)
         return num_qubits
 def setup_circuit():
     st.session_state.num_qubits = num_qubits  # Save to session state
-    
     return qc
 @st.cache_resource
-def get_circuit(gates, num_qubits, measure = True):
+def get_circuit(gates, num_qubits, measure=True, rand_seed=42):
+    random.seed(rand_seed)
+
     qc = QuantumCircuit(num_qubits, num_qubits)
 
     if "Hadamard/H-Gate" in gates:
         for qubit in range(num_qubits):
             if random.random() < 0.8:
                 qc.h(qubit)
-
     if "X-Gate" in gates:
         for qubit in range(num_qubits):
             if random.random() < 0.5:
                 qc.x(qubit)
-
     if "Y-Gate" in gates:
         for qubit in range(num_qubits):
             if random.random() < 0.5:
                 qc.y(qubit)
-
     if "CX-Gate" in gates:
         for qubit in range(0, num_qubits - 1, 2):
             if random.random() < 0.5:
                 qc.cx(qubit, qubit + 1)
-
     if "Z-Gate" in gates:
         for qubit in range(num_qubits):
             if random.random() < 0.5:
                 qc.z(qubit)
-    qc_mod = qc.copy()    
+
+    qc_mod = qc.copy()
     if measure:
         for i in range(num_qubits):
-            qc.measure(i, i) 
+            qc.measure(i, i)
     return qc, qc_mod
 @st.cache_data
-def simulate_circuit(num_qubits: int):
+def simulate_circuit(circuit_hash: int, _qc: QuantumCircuit):
     simulator = AerSimulator()
-    shots = (num_qubits*num_qubits)
-    compiled_circuit = transpile(qc, simulator)
-    result = simulator.run(compiled_circuit, shots=num_qubits * num_qubits).result()
+    shots = (_qc.num_qubits ** 2)
+    compiled_circuit = transpile(_qc, simulator)
+    result = simulator.run(compiled_circuit, shots=shots).result()
     counts = result.get_counts()
 
     bitstring_list = []
@@ -79,7 +80,7 @@ def simulate_circuit(num_qubits: int):
         bitstring_list.extend([bitstring] * cnt)
 
     int_values = [int(bs, 2) for bs in bitstring_list]
-    int_array = np.array(int_values).reshape(num_qubits, num_qubits)
+    int_array = np.array(int_values).reshape(qc.num_qubits, qc.num_qubits)
 
     return int_array, counts, bitstring_list
 @st.cache_data
@@ -95,6 +96,7 @@ def set_state(i):
 
 # Stage 0: Initial button to start
 if st.session_state.stage == 0:
+    st.session_state.random_seed = random.randint(0, 1_000_000)
     st.button('Begin', on_click=set_state, args=[1], key="begin_button")
 
 # Stage 1: Create the quantum circuit
@@ -118,7 +120,8 @@ if st.session_state.stage >= 2:
 
 
     st.write("### Quantum Circuit with Gates:")
-    qc, qc_mod = get_circuit(gates, num_qubits, True)
+    rand_seed = hash(str(gates) + str(num_qubits))  # hashable input
+    qc, qc_mod = get_circuit(gates, num_qubits, True, rand_seed=rand_seed)
     fig = qc.draw(output='mpl')
     st.pyplot(fig)
 
@@ -129,7 +132,8 @@ if st.session_state.stage >= 2:
 # Stage 3: Simulate the quantum circuit
 if st.session_state.stage >= 3:
     st.write("### Simulating the Quantum Circuit:")
-    int_array, counts, bitstring_list = simulate_circuit(num_qubits)
+    circuit_hash = hash(str(qc.data))
+    int_array, counts, bitstring_list = simulate_circuit(circuit_hash, qc)
 
     if not st.session_state.generate_extra:
         set_state(4)  # Skip to stage 4
@@ -144,18 +148,15 @@ if st.session_state.stage >= 3:
 
         # Button to go to the next stage
         st.button('Next Step', on_click=set_state, args=[4], key="next_step_3")
-
-    
-
 # Stage 6: Visualize the results
 if st.session_state.stage >= 4:                 
-    tab1, tab2, tab3, tab4, tab5= st.tabs(["Full-Data","Pixel-Art", "3-D Plot", "DNA", "Bloch Sphere"])
+    tab1, tab2, tab3, tab4, tab5= st.tabs(["Full-Data", "Bloch Spehere", "Pixel-Art", "3-D Plot", "DNA"])
     with tab1:
         columns = [f"Q-Bit {i}" for i in range(int_array.shape[1])]
         df = pd.DataFrame(int_array, columns=columns)
         with chart_container(df):
             st.area_chart(df)
-    with tab2:
+    with tab3:
         # Create a Seaborn heatmap
         fig, ax = plt.subplots()
         sns.heatmap(int_array, annot=False, fmt='d', cmap='coolwarm', cbar=True)
@@ -164,13 +165,13 @@ if st.session_state.stage >= 4:
         ax.set_title("Quantum Randomness in Seaborn")
         
         st.pyplot(fig)
-    with tab3:
+    with tab4:
         fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d')
         X, Y = np.meshgrid(np.arange(num_qubits), np.arange(num_qubits))
         ax.plot_surface(X, Y, int_array, cmap='coolwarm')
         st.pyplot(fig)
-    with tab4:
+    with tab5:
         dna_library = {
                 '0': 'A',
                 '1': 'C',
@@ -186,9 +187,10 @@ if st.session_state.stage >= 4:
 
         dna_sequence_str = ''.join(dna_sequence)
         st.write("Generated DNA Sequence:", dna_sequence_str)
-    with tab5: 
-        if num_qubits >6:
-            st.write("The Bloch Sphere visualization is limited to 6 qubits for clarity/run time.")
+    with tab2: 
+        max_simulation_qbits = 8
+        if num_qubits >max_simulation_qbits:
+            st.write(f"The Bloch Sphere visualization is limited to {max_simulation_qbits} qubits for clarity/run time.")
         else:
             circuit_hash = hash(str(qc_mod.data))
             state = get_statevector_from_hash(circuit_hash, qc_mod)
@@ -200,6 +202,3 @@ if st.session_state.stage >= 4:
         st.markdown("Save your circuit output as a visualization of your quantum journey!")
     # Option to start over
     st.button('Start Over', on_click=set_state, args=[0], key="start_over")
-
-  
-
