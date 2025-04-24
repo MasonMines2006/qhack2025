@@ -10,7 +10,7 @@ from mpl_toolkits.mplot3d import Axes3D
 import pydeck as pdk
 import random
 import seaborn as sns
-from qiskit.qasm3 import dumps
+import plotly.graph_objects as go
 
 from streamlit_extras.chart_container import chart_container 
 from streamlit_extras.dataframe_explorer import dataframe_explorer
@@ -166,11 +166,24 @@ if st.session_state.stage >= 4:
         
         st.pyplot(fig)
     with tab4:
-        fig = plt.figure()
-        ax = fig.add_subplot(111, projection='3d')
+        # Create a grid
         X, Y = np.meshgrid(np.arange(num_qubits), np.arange(num_qubits))
-        ax.plot_surface(X, Y, int_array, cmap='coolwarm')
-        st.pyplot(fig)
+
+        # Build interactive 3D surface plot
+        fig = go.Figure(data=[go.Surface(z=int_array, x=X, y=Y, colorscale='RdBu')])
+        fig.update_layout(
+            title='Quantum Surface Plot',
+            scene=dict(
+                xaxis_title='Qubit X',
+                yaxis_title='Qubit Y',
+                zaxis_title='Measurement Value',
+            ),
+            autosize=True,
+            margin=dict(l=0, r=0, t=40, b=0)
+        )
+
+        # Display in Streamlit
+        st.plotly_chart(fig, use_container_width=True)
     with tab5:
         dna_library = {
                 '0': 'A',
