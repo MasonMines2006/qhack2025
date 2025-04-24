@@ -96,7 +96,6 @@ def set_state(i):
 
 # Stage 0: Initial button to start
 if st.session_state.stage == 0:
-    st.write(st.session_state.random_seed)
     st.button('Begin', on_click=set_state, args=[1], key="begin_button")
 
 # Stage 1: Create the quantum circuit
