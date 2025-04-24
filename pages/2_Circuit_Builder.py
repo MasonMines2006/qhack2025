@@ -96,7 +96,7 @@ def set_state(i):
 
 # Stage 0: Initial button to start
 if st.session_state.stage == 0:
-    st.session_state.random_seed = random.randint(0, 1_000_000)
+    st.write(st.session_state.random_seed)
     st.button('Begin', on_click=set_state, args=[1], key="begin_button")
 
 # Stage 1: Create the quantum circuit
@@ -145,6 +145,7 @@ if st.session_state.stage >= 3:
         df = pd.DataFrame(int_array, columns=columns)
         filtered_df = dataframe_explorer(df, case=False)
         st.dataframe(filtered_df, use_container_width=True)
+        st.write(f"Random Seed (used to generate circuit) :{st.session_state.random_seed}")
 
         # Button to go to the next stage
         st.button('Next Step', on_click=set_state, args=[4], key="next_step_3")
