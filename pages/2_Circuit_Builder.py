@@ -10,6 +10,7 @@ from mpl_toolkits.mplot3d import Axes3D
 import pydeck as pdk
 import random
 import seaborn as sns
+from qiskit.qasm3 import dumps
 
 from streamlit_extras.chart_container import chart_container 
 from streamlit_extras.dataframe_explorer import dataframe_explorer
@@ -65,7 +66,6 @@ def get_circuit(gates, num_qubits, measure = True):
         for i in range(num_qubits):
             qc.measure(i, i) 
     return qc, qc_mod
-
 @st.cache_data
 def simulate_circuit(num_qubits: int):
     simulator = AerSimulator()
@@ -82,9 +82,9 @@ def simulate_circuit(num_qubits: int):
     int_array = np.array(int_values).reshape(num_qubits, num_qubits)
 
     return int_array, counts, bitstring_list
-@st.cache_resource
-def get_statevector(_qc_mod):
-    return Statevector.from_instruction(_qc_mod)
+@st.cache_data
+def get_statevector_from_hash(circuit_hash: int, _qc: QuantumCircuit):
+    return Statevector.from_instruction(_qc)
 
 # Initialize stage state if not present
 if 'stage' not in st.session_state:
@@ -187,10 +187,13 @@ if st.session_state.stage >= 4:
         dna_sequence_str = ''.join(dna_sequence)
         st.write("Generated DNA Sequence:", dna_sequence_str)
     with tab5: 
-        st.write("### Bloch Sphere Visualization:")
-        state = get_statevector(qc_mod)
-        fig = plot_bloch_multivector(state)
-        st.pyplot(fig)
+        if num_qubits >6:
+            st.write("The Bloch Sphere visualization is limited to 6 qubits for clarity/run time.")
+        else:
+            circuit_hash = hash(str(qc_mod.data))
+            state = get_statevector_from_hash(circuit_hash, qc_mod)
+            fig = plot_bloch_multivector(state)
+            st.pyplot(fig)
         
       # Final instructions
         st.markdown("---")
